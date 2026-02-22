@@ -89,8 +89,14 @@ sun-tracking-six-leg-panel-system/
 │
 ├── sun_tracking_six_leg_panel.py   # main simulation code
 ├── README.md
-└── report.pdf (optional academic report)
+└└── docs/
+      └── six_leg_panel_system.pdf
 ```
+## 📄 Academic Report
+
+You can read the full academic report here:
+
+📥 [Download PDF](docs/six_leg_panel_system.pdf)
 
 ## Author
 
