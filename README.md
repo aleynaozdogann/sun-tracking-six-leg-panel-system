@@ -40,7 +40,7 @@ The main objectives of this project are:
 
 ---
 
-# ⚙ System Description
+# System Description
 
 The simulated system consists of:
 
