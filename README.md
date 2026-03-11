@@ -142,6 +142,9 @@ The full academic study describing the mathematical modeling and simulation of t
  **[Download PDF](docs/six_leg_panel_system.pdf)**
 
 ---
+## Simulation Preview
+
+![Solar Tracking Simulation](images/simulation.gif)
 
 #  Author
 
