@@ -1,4 +1,4 @@
-# ☀️ Sun-Tracking Six-Leg Panel System
+#  Sun-Tracking Six-Leg Panel System
 ## Mathematical Modeling, Simulation and Future AI Integration
 
 This project presents the **mathematical modeling, kinematic analysis, and real-time 3D simulation** of a sun-tracking solar panel system driven by a **six-leg parallel mechanism inspired by the Stewart platform architecture**.
@@ -9,7 +9,7 @@ The project originated as an **academic mathematical modeling study** and is bei
 
 ---
 
-# 📌 Project Overview
+#  Project Overview
 
 Solar panels generate maximum energy when their surface is perpendicular to incoming sunlight. Fixed panels or limited-axis tracking systems cannot maintain this optimal orientation throughout the day.
 
@@ -27,7 +27,7 @@ The system simulates how a **Stewart platform based structure** could be used to
 
 ---
 
-# 🎯 Objectives
+#  Objectives
 
 The main objectives of this project are:
 
@@ -40,7 +40,7 @@ The main objectives of this project are:
 
 ---
 
-# ⚙️ System Description
+# ⚙ System Description
 
 The simulated system consists of:
 
@@ -60,7 +60,7 @@ The simulated system consists of:
 
 ---
 
-# 🧮 Mathematical Modeling
+#  Mathematical Modeling
 
 The mathematical model is based on:
 
@@ -75,7 +75,7 @@ The panel orientation is determined so that the panel surface remains **orthogon
 
 ---
 
-# 🎥 Simulation Features
+#  Simulation Features
 
 The simulation includes:
 
@@ -89,7 +89,7 @@ The simulation includes:
 
 ---
 
-# 🧰 Technologies Used
+#  Technologies Used
 
 - **Python**
 - **NumPy** — numerical computation
@@ -97,7 +97,7 @@ The simulation includes:
 
 ---
 
-# 🗂 Project Structure
+#  Project Structure
 
 ```
 sun-tracking-six-leg-panel-system
@@ -119,7 +119,7 @@ sun-tracking-six-leg-panel-system
 
 ---
 
-# 📊 Future Development
+# Future Development
 
 This project is being extended beyond simulation toward a **data-driven solar optimization system**.
 
@@ -135,15 +135,15 @@ These extensions aim to combine **mathematical modeling, simulation engineering,
 
 ---
 
-# 📄 Academic Report
+#  Academic Report
 
 The full academic study describing the mathematical modeling and simulation of the system is available here:
 
-📥 **[Download PDF](docs/six_leg_panel_system.pdf)**
+ **[Download PDF](docs/six_leg_panel_system.pdf)**
 
 ---
 
-# 👩‍💻 Author
+#  Author
 
 **Aleyna Özdoğan**
 
