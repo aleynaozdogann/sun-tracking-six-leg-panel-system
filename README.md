@@ -134,7 +134,17 @@ Planned improvements include:
 These extensions aim to combine **mathematical modeling, simulation engineering, and machine learning**.
 
 ---
+## Synthetic Dataset Generation
 
+The simulation can generate a synthetic dataset by recording:
+
+- Sun position
+- Panel tilt angle
+- Tracking status
+- Leg lengths
+
+This dataset will be used in future versions of the project for **machine learning based solar tracking optimization**.
+---
 #  Academic Report
 
 The full academic study describing the mathematical modeling and simulation of the system is available here:
