@@ -1,15 +1,37 @@
-#  Sun-Tracking Six-Leg Panel System
-## Mathematical Modeling, Simulation and Future AI Integration
+# Sun-Tracking Six-Leg Panel System
+## Mathematical Modeling, 3D Simulation and Machine Learning for Solar Tracking
 
 This project presents the **mathematical modeling, kinematic analysis, and real-time 3D simulation** of a sun-tracking solar panel system driven by a **six-leg parallel mechanism inspired by the Stewart platform architecture**.
 
 The system dynamically adjusts the orientation of the solar panel so that its **normal vector aligns with the Sun's direction**, maximizing solar energy exposure.
 
-The project originated as an **academic mathematical modeling study** and is being further developed into a **simulation-driven engineering project with future machine learning integration**.
+The project originated as an **academic mathematical modeling study** and is now being extended into a **simulation-driven engineering project with machine learning integration**.
 
 ---
 
-#  Project Overview
+# Quick Summary
+
+This project combines **mathematical modeling, simulation engineering, and machine learning** to study optimal solar panel orientation.
+
+**Simulation**
+
+- Six-leg Stewart platform inspired mechanism  
+- Real-time 3D visualization  
+- Dynamic Sun motion  
+
+**Machine Learning**
+
+- Model: Random Forest Regressor  
+- Input: `sun_x`, `sun_y`, `sun_z`  
+- Output: `panel_zenith_deg`  
+
+**Current Model Performance**
+
+R² Score ≈ **0.99**
+
+---
+
+# Project Overview
 
 Solar panels generate maximum energy when their surface is perpendicular to incoming sunlight. Fixed panels or limited-axis tracking systems cannot maintain this optimal orientation throughout the day.
 
@@ -27,7 +49,7 @@ The system simulates how a **Stewart platform based structure** could be used to
 
 ---
 
-#  Objectives
+# Objectives
 
 The main objectives of this project are:
 
@@ -60,7 +82,7 @@ The simulated system consists of:
 
 ---
 
-#  Mathematical Modeling
+# Mathematical Modeling
 
 The mathematical model is based on:
 
@@ -75,7 +97,7 @@ The panel orientation is determined so that the panel surface remains **orthogon
 
 ---
 
-#  Simulation Features
+# Simulation Features
 
 The simulation includes:
 
@@ -89,21 +111,28 @@ The simulation includes:
 
 ---
 
-#  Technologies Used
+# Technologies Used
 
 - **Python**
 - **NumPy** — numerical computation
-- **Matplotlib** — 3D visualization & animation
+- **Matplotlib** — 3D visualization and animation
+- **scikit-learn** — machine learning model training
 
 ---
 
-#  Project Structure
-
-```
-sun-tracking-six-leg-panel-system
+# Project Structure
+``` 
+Sun-tracking-six-leg-panel-system
+│
+├── data/
+│   └── solar_tracking_dataset.csv
 │
 ├── docs/
 │   └── six_leg_panel_system.pdf
+│
+├── images/
+│   ├── simulation.gif
+│   └── ml_prediction.png
 │
 ├── src/
 │   ├── main.py
@@ -117,88 +146,116 @@ sun-tracking-six-leg-panel-system
 ├── requirements.txt
 └── .gitignore
 ```
-
 ---
 
-# Future Development
+# Synthetic Dataset Generation
 
-This project is being extended beyond simulation toward a **data-driven solar optimization system**.
+The simulation can generate a **synthetic dataset** by recording:
 
-Planned improvements include:
+- Sun position  
+- Panel tilt angle  
+- Tracking status  
+- Leg lengths  
 
-- synthetic dataset generation from simulation  
-- machine learning models for optimal panel angle prediction  
-- energy optimization experiments  
-- weather-aware solar tracking  
-- improved visualization and system monitoring  
+This dataset can be used for **machine learning based solar tracking optimization**.
 
-These extensions aim to combine **mathematical modeling, simulation engineering, and machine learning**.
-
----
-## Synthetic Dataset Generation
-
-The simulation can generate a synthetic dataset by recording:
-
-- Sun position
-- Panel tilt angle
-- Tracking status
-- Leg lengths
-
-This dataset will be used in future versions of the project for **machine learning based solar tracking optimization**.
----
 ---
 
 # Machine Learning Model
 
 A machine learning model has been implemented to predict the **optimal solar panel zenith angle** from the Sun direction vector.
 
-The dataset used for training is synthetically generated from the physical simulation.
+The dataset used for training is generated from the physical simulation.
 
 ### Model Input Features
 
-- sun_x  
-- sun_y  
-- sun_z  
+- `sun_x`
+- `sun_y`
+- `sun_z`
 
-These values represent the **Sun direction vector in 3D space**.
+These represent the **Sun direction vector in 3D space**.
 
 ### Target Variable
 
-- panel_zenith_deg
+- `panel_zenith_deg`
 
 This represents the **optimal tilt angle of the solar panel** required to align the panel normal with the Sun direction.
 
 ### Model Used
 
-A **Random Forest Regressor** was trained using the generated dataset.
+Random Forest Regressor
 
 ### Model Performance
 
-The trained model achieves approximately:
-
 **R² Score ≈ 0.99**
 
-This indicates that the model can accurately learn the relationship between the Sun vector and the required panel tilt angle.
+This indicates that the model successfully learns the relationship between the Sun vector and the required panel tilt angle.
 
-### Prediction Visualization
+---
+
+# Prediction Visualization
 
 The following plot shows the relationship between the **real panel angle** and the **model prediction**.
 
-*(points close to the diagonal line indicate high model accuracy)*
-![ML Prediction](images/ml_prediction.png)g
+Points close to the diagonal line indicate high model accuracy.
+
+![ML Prediction](images/ml_prediction.png)
+
 ---
-#  Academic Report
+
+# Academic Report
 
 The full academic study describing the mathematical modeling and simulation of the system is available here:
 
- **[Download PDF](docs/six_leg_panel_system.pdf)**
+**Download PDF**
+
+[docs/six_leg_panel_system.pdf](docs/six_leg_panel_system.pdf)
 
 ---
-## Simulation Preview
+
+# Simulation Preview
 
 ![Solar Tracking Simulation](images/simulation.gif)
 
-#  Author
+---
+
+# How to Run
+
+Clone the repository
+
+`git clone https://github.com/aleynaozdogann/sun-tracking-six-leg-panel-system.git`
+
+Navigate into the project folder
+
+`cd sun-tracking-six-leg-panel-system`
+
+Install dependencies
+
+`pip install -r requirements.txt`
+
+Run the simulation
+
+`python src/main.py`
+
+Train the machine learning model
+
+`python src/train_model.py`
+
+---
+
+# Future Development
+
+Planned improvements include:
+
+- integrating ML predictions directly into the simulation  
+- comparing physics-based and ML-based control  
+- weather-aware solar tracking  
+- energy optimization experiments  
+- improved system monitoring and visualization  
+
+---
+
+# Author
 
 **Aleyna Özdoğan**
 
