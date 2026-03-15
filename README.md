@@ -110,6 +110,7 @@ sun-tracking-six-leg-panel-system
 │   ├── simulation.py
 │   ├── kinematics.py
 │   ├── solar_math.py
+│   ├── train_model.py
 │   └── utils.py
 │
 ├── README.md
@@ -144,6 +145,47 @@ The simulation can generate a synthetic dataset by recording:
 - Leg lengths
 
 This dataset will be used in future versions of the project for **machine learning based solar tracking optimization**.
+---
+---
+
+# Machine Learning Model
+
+A machine learning model has been implemented to predict the **optimal solar panel zenith angle** from the Sun direction vector.
+
+The dataset used for training is synthetically generated from the physical simulation.
+
+### Model Input Features
+
+- sun_x  
+- sun_y  
+- sun_z  
+
+These values represent the **Sun direction vector in 3D space**.
+
+### Target Variable
+
+- panel_zenith_deg
+
+This represents the **optimal tilt angle of the solar panel** required to align the panel normal with the Sun direction.
+
+### Model Used
+
+A **Random Forest Regressor** was trained using the generated dataset.
+
+### Model Performance
+
+The trained model achieves approximately:
+
+**R² Score ≈ 0.99**
+
+This indicates that the model can accurately learn the relationship between the Sun vector and the required panel tilt angle.
+
+### Prediction Visualization
+
+The following plot shows the relationship between the **real panel angle** and the **model prediction**.
+
+*(points close to the diagonal line indicate high model accuracy)*
+![ML Prediction](images/ml_prediction.png)g
 ---
 #  Academic Report
 

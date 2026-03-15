@@ -40,6 +40,7 @@ def train_model():
     plt.xlabel("Real Angle")
     plt.ylabel("Predicted Angle")
     plt.title("Prediction vs Real")
+    plt.savefig("../images/ml_prediction.png")
     plt.show()
 
 train_model()
