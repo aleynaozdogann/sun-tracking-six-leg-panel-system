@@ -3,6 +3,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score
 import matplotlib.pyplot as plt
+import joblib
+
 
 def train_model():
     df = pd.read_csv("../data/solar_tracking_dataset.csv")
@@ -43,4 +45,9 @@ def train_model():
     plt.savefig("../images/ml_prediction.png")
     plt.show()
 
-train_model()
+    return model
+
+
+model = train_model()
+joblib.dump(model, "solar_tracking_model.pkl")
+print("Model saved successfully.")

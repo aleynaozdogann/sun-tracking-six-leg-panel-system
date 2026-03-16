@@ -1,8 +1,30 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-
+import joblib
 from kinematics import get_bpts, get_ipts, get_panel, br, max_s
+
+model = joblib.load("solar_tracking_model.pkl")
+print("Loaded model:", model)
+print("Model type:", type(model))
+
+def predict_panel_zenith(sx,sy,sz):
+    x = np.array([[sx,sy,sz]])
+    pred = model.predict(x)[0]
+    return pred
+
+def build_ml_target_vector(sx,sy,sz,predicted_zenith_deg,radius=120):
+    azimuth = np.arctan2(sy,sx)
+    zenith_rad =np.radians(predicted_zenith_deg)
+
+    new_sx = radius * np.sin(zenith_rad) * np.cos(azimuth)
+    new_sy = radius * np.sin(zenith_rad) * np.sin(azimuth)
+    new_sz = radius * np.cos(zenith_rad)
+
+    return np.array([new_sx,new_sy,new_sz])
+
+
+
 
 def run_simulation():
     fig = plt.figure(figsize=(13, 8))
@@ -74,13 +96,21 @@ def run_simulation():
         sy = -80 * np.sin(ang)
         sz = 120 * np.cos(ang)
         sun = np.array([sx, sy, sz])
-
-        ipts = get_ipts(sun)
-        real_normal, normal, PX, PY, PZ = get_panel(ipts, sun)
-
-        required_deg = np.degrees(np.arccos(real_normal[2]))
-        tilt_deg = np.degrees(np.arccos(normal[2]))
+        sun_norm = sun / np.linalg.norm(sun)
+        required_deg = np.degrees(np.arccos(sun_norm[2]))
+        predicted_deg = predict_panel_zenith(sx,sy,sz)
         max_tilt_deg = np.degrees(max_s)
+        predicted_deg = np.clip(predicted_deg, 0, max_tilt_deg)
+        ml_sun = build_ml_target_vector(
+            sx,sy,sz,
+            predicted_deg,
+            radius = np.linalg.norm(sun)
+        )
+
+        ipts = get_ipts(ml_sun)
+        real_normal, normal, PX, PY, PZ = get_panel(ipts, ml_sun)
+
+        tilt_deg = np.degrees(np.arccos(normal[2]))
         status = "TRACKING" if required_deg < max_tilt_deg else "OUT OF RANGE"
 
         if status == "OUT OF RANGE":
@@ -146,6 +176,7 @@ def run_simulation():
 
         tilt_text.set_text(
             f"Max Zenith: {max_tilt_deg:5.2f}\n"
+            f"Predicted Zenith: {predicted_deg:5.2f}\n"
             f"Panel Zenith: {tilt_deg:5.2f}\n"
             f"Required Zenith: {required_deg:5.2f}\n"
             f"Status: {status}"
@@ -161,3 +192,4 @@ def run_simulation():
 
     plt.tight_layout()
     plt.show()
+
