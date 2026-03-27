@@ -3,28 +3,29 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import joblib
+import itertools
 
 from kinematics import get_bpts, get_ipts, get_panel, br, max_s
 
+leg_names = ["RED", "GREEN", "BLUE"]
 
-# =========================
-# MODEL LOAD
-# =========================
+# -------------------------
+# Model Load
+# -------------------------
 model = joblib.load("solar_tracking_model.pkl")
 print("Loaded model:", model)
 print("Model type:", type(model))
 
-
-# =========================
-# LEG CONSTRAINTS
-# =========================
+# -------------------------
+# Leg Constraints
+# -------------------------
 LEG_MIN = 40
 LEG_MAX = 140
 
 
-# =========================
-# ML PREDICTION
-# =========================
+# -------------------------
+# ML Prediction
+# -------------------------
 def predict_panel_zenith(sx, sy, sz):
     x = pd.DataFrame([{
         "sun_x": sx,
@@ -46,9 +47,9 @@ def build_ml_target_vector(sx, sy, sz, predicted_zenith_deg, radius=120):
     return np.array([new_sx, new_sy, new_sz])
 
 
-# =========================
-# LEG LENGTH CHECK
-# =========================
+# -------------------------
+# Leg Length Check
+# -------------------------
 def compute_leg_lengths(bpts, ipts):
     lengths = []
     for k in range(3):
@@ -71,10 +72,32 @@ def check_leg_constraints(lengths, leg_min=LEG_MIN, leg_max=LEG_MAX):
             return False
     return True
 
+def get_leg_status_messages(lengths, leg_min=LEG_MIN, leg_max=LEG_MAX):
+    messages = []
+    leg_names = ["RED", "GREEN", "BLUE"]
 
-# =========================
-# MAIN SIMULATION
-# =========================
+    for k, (right_len, left_len) in enumerate(lengths):
+        name = leg_names[k]
+
+        if right_len < leg_min:
+            messages.append(f"{name} Right: SHORT")
+        elif right_len > leg_max:
+            messages.append(f"{name} Right: LONG")
+
+        if left_len < leg_min:
+            messages.append(f"{name} Left: SHORT")
+        elif left_len > leg_max:
+            messages.append(f"{name} Left: LONG")
+
+    if not messages:
+        messages.append("All legs OK")
+
+    return messages
+
+
+# -------------------------
+# Main Simulation
+# -------------------------
 def run_simulation():
     fig = plt.figure(figsize=(13, 8))
     ax = fig.add_subplot(111, projection='3d')
@@ -88,7 +111,9 @@ def run_simulation():
     ax.set_zlabel("Z")
     ax.set_title("ML-Based Solar Tracking with Leg-Length Constraints")
 
+    # -------------------------
     # Base disk
+    # -------------------------
     theta = np.linspace(0, 2 * np.pi, 60)
     r = np.linspace(0, br, 20)
     T, R = np.meshgrid(theta, r)
@@ -103,10 +128,14 @@ def run_simulation():
 
     bpts = get_bpts()
 
+    # -------------------------
     # Static base points
+    # -------------------------
     ax.scatter(bpts[:, 0], bpts[:, 1], bpts[:, 2], c="darkgreen", s=40, label="Base Points")
 
+    # -------------------------
     # Objects
+    # -------------------------
     sun_scatter = ax.scatter([], [], [], c="orange", s=400, edgecolors="yellow")
     ipts_scatter = ax.scatter([], [], [], c="black", s=25)
 
@@ -121,33 +150,72 @@ def run_simulation():
         ln, = ax.plot([], [], [], color=link_colors[k], linewidth=2)
         leg_lines.append(ln)
 
+
+
+    # -------------------------
     # Text blocks
+    # -------------------------
     sun_text = ax.text2D(
         1.05, 0.95, "", transform=ax.transAxes,
-        fontsize=12, va="top", color="orange"
+        fontsize=10, va="top", color="orange"
     )
 
     leg_texts = []
-    y_positions = [0.88, 0.66, 0.44]
+    y_positions = [0.90, 0.75, 0.60]
+
     for k in range(3):
         t = ax.text2D(
             1.05, y_positions[k], "", transform=ax.transAxes,
-            fontsize=10, va="top", color=link_colors[k]
+            fontsize=9, va="top", color=link_colors[k]
         )
         leg_texts.append(t)
 
     tilt_text = ax.text2D(
-        1.05, 0.22, "", transform=ax.transAxes,
-        fontsize=12, va="top", color="red"
+        1.05, 0.35, "", transform=ax.transAxes,
+        fontsize=10, va="top", color="red"
+    )
+
+    constraint_text = ax.text2D(
+        1.05, 0.10, "", transform=ax.transAxes,
+        fontsize=9, va="top", color="purple"
     )
 
     panel_surf = None
 
+    last_valid_ipts = None
+    last_valid_PX = None
+    last_valid_PY = None
+    last_valid_PZ = None
+    last_valid_tilt_deg = None
+    last_valid_leg_lengths = None
+
+    locked_out = False
+    current_cycle = -1
+    seen_valid_in_cycle = False
+
     def update(frame):
         nonlocal panel_surf
+        nonlocal last_valid_ipts, last_valid_PX, last_valid_PY, last_valid_PZ
+        nonlocal last_valid_tilt_deg, last_valid_leg_lengths
+        nonlocal locked_out, current_cycle, seen_valid_in_cycle
 
         total = 200
-        ang = (frame - total / 2) / (total / 2)
+        cycle = frame // total
+        local_frame = frame % total
+
+        if cycle != current_cycle:
+            current_cycle = cycle
+            locked_out = False
+            seen_valid_in_cycle = False
+
+            last_valid_ipts = None
+            last_valid_PX = None
+            last_valid_PY = None
+            last_valid_PZ = None
+            last_valid_tilt_deg = None
+            last_valid_leg_lengths = None
+
+        ang = (local_frame - total / 2) / (total / 2)
 
         # -------------------------
         # Sun position
@@ -187,33 +255,97 @@ def run_simulation():
         # -------------------------
         leg_lengths = compute_leg_lengths(bpts, ipts)
         legs_valid = check_leg_constraints(leg_lengths)
+        leg_status_messages = get_leg_status_messages(leg_lengths)
         sun_valid = required_deg < max_tilt_deg
+        print(
+            f"frame={frame}, cycle={cycle}, local={local_frame}, "
+            f"sun_valid={sun_valid}, legs_valid={legs_valid}, locked_out={locked_out}"
+        )
 
-        if sun_valid and legs_valid:
-            status = "TRACKING"
+        current_valid = sun_valid and legs_valid
+        fail_reason = None
+
+        if not sun_valid:
+            fail_reason = "SUN_LIMIT"
+        elif not legs_valid:
+            fail_reason = "LEG_LIMIT"
+
+        if not locked_out:
+            if current_valid:
+                status = "TRACKING"
+                seen_valid_in_cycle = True
+
+                last_valid_ipts = ipts.copy()
+                last_valid_PX = PX.copy()
+                last_valid_PY = PY.copy()
+                last_valid_PZ = PZ.copy()
+                last_valid_tilt_deg = tilt_deg
+                last_valid_leg_lengths = list(leg_lengths)
+
+            else:
+                if not seen_valid_in_cycle:
+                    status = "WAITING"
+                else:
+                    status = "LOCKED"
+
+                    if last_valid_ipts is not None:
+                        locked_out = True
+                        ipts = last_valid_ipts
+                        PX = last_valid_PX
+                        PY = last_valid_PY
+                        PZ = last_valid_PZ
+                        tilt_deg = last_valid_tilt_deg
+                        leg_lengths = list(last_valid_leg_lengths)
+
         else:
-            status = "OUT OF RANGE"
+            status = "LOCKED"
 
+            if last_valid_ipts is not None:
+                ipts = last_valid_ipts
+                PX = last_valid_PX
+                PY = last_valid_PY
+                PZ = last_valid_PZ
+                tilt_deg = last_valid_tilt_deg
+                leg_lengths = list(last_valid_leg_lengths)
         # -------------------------
         # Color logic
         # -------------------------
-        if status == "OUT OF RANGE":
-            gray = "gray"
-            panel_color = "gray"
+        if status == "LOCKED":
+            if fail_reason == "LEG_LIMIT":
+                panel_color = "red"  # 🔥 bacak problemi
+            elif fail_reason == "SUN_LIMIT":
+                panel_color = "gray"  # 🌑 güneş limiti
+            else:
+                panel_color = "gray"
 
-            tilt_text.set_color(gray)
-            sun_text.set_color(gray)
-            ipts_scatter.set_color(gray)
+            tilt_text.set_color("gray")
+            sun_text.set_color("gray")
+            ipts_scatter.set_color("gray")
+            constraint_text.set_color("gray")
 
             for k in range(3):
-                leg_texts[k].set_color(gray)
-                leg_lines[k].set_color(gray)
-        else:
+                leg_texts[k].set_color("gray")
+                leg_lines[k].set_color("gray")
+
+        elif status == "WAITING":
+            panel_color = "lightsteelblue"
+
+            tilt_text.set_color("purple")
+            sun_text.set_color("orange")
+            ipts_scatter.set_color("black")
+            constraint_text.set_color("purple")
+
+            for k in range(3):
+                leg_texts[k].set_color(link_colors[k])
+                leg_lines[k].set_color(link_colors[k])
+
+        else:  # TRACKING
             panel_color = "dodgerblue"
 
             tilt_text.set_color("red")
             sun_text.set_color("orange")
             ipts_scatter.set_color("black")
+            constraint_text.set_color("purple")
 
             for k in range(3):
                 leg_texts[k].set_color(link_colors[k])
@@ -246,13 +378,12 @@ def run_simulation():
             right_ok = LEG_MIN <= right_len <= LEG_MAX
             left_ok = LEG_MIN <= left_len <= LEG_MAX
 
+            name = leg_names[k]
+
             leg_texts[k].set_text(
-                f"Right Leg = {right_len:.2f} ({'OK' if right_ok else 'X'})\n"
-                f" Base = ({base[0]:6.1f}, {base[1]:6.1f}, {base[2]:4.1f})\n"
-                f" Panel = ({panel_pt[0]:6.1f}, {panel_pt[1]:6.1f}, {panel_pt[2]:4.1f})\n"
-                f"Left Leg = {left_len:.2f} ({'OK' if left_ok else 'X'})\n"
-                f" Panel = ({panel_pt[0]:6.1f}, {panel_pt[1]:6.1f}, {panel_pt[2]:4.1f})\n"
-                f" NextBase = ({next_base[0]:6.1f}, {next_base[1]:6.1f}, {next_base[2]:4.1f})"
+                f"{name} LEG\n"
+                f"R: {right_len:.1f} ({'OK' if right_ok else 'X'})\n"
+                f"L: {left_len:.1f} ({'OK' if left_ok else 'X'})"
             )
 
         # -------------------------
@@ -281,13 +412,20 @@ def run_simulation():
             f"Leg Range: [{LEG_MIN}, {LEG_MAX}]\n"
             f"Status: {status}"
         )
+        extra = f"\nFail: {fail_reason}" if fail_reason else ""
+
+        constraint_text.set_text(
+            "Constraint Info:\n" +
+            "\n".join(leg_status_messages) +
+            extra
+        )
 
         sun_text.set_text(
             f"Sun = ({sx:6.1f}, {sy:6.1f}, {sz:6.1f})"
         )
 
         print(
-            f"Frame {frame:03d} | "
+            f"Cycle {cycle} | LocalFrame {local_frame:03d} | " 
             f"Pred={predicted_deg:.2f} | "
             f"Req={required_deg:.2f} | "
             f"Panel={tilt_deg:.2f} | "
@@ -295,9 +433,15 @@ def run_simulation():
             f"SunValid={sun_valid} | LegsValid={legs_valid} | Status={status}"
         )
 
-        return leg_lines + [sun_scatter, ipts_scatter, panel_surf] + leg_texts + [sun_text, tilt_text]
+        return leg_lines + [sun_scatter, ipts_scatter, panel_surf] + leg_texts + [sun_text, tilt_text, constraint_text]
 
-    ani = animation.FuncAnimation(fig, update, frames=200, interval=70)
+    ani = animation.FuncAnimation(
+        fig,
+        update,
+        frames=itertools.count(),
+        interval=70,
+        repeat=False
+    )
 
     plt.tight_layout()
     plt.show()

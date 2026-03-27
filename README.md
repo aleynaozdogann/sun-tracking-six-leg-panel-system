@@ -29,6 +29,11 @@ This project combines **mathematical modeling, simulation engineering, and machi
 
 R² Score ≈ **0.99**
 
+**Control System**
+
+- Constraint-aware state machine (WAITING / TRACKING / LOCKED)  
+- Failure classification (SUN_LIMIT vs LEG_LIMIT)  
+
 ---
 
 # Project Overview
@@ -106,11 +111,32 @@ The simulation includes:
 - dynamic **panel orientation**  
 - continuous **leg length adjustment**  
 - mechanical **tilt constraint handling**  
-- **out-of-range detection**  
-- live **system state visualization**
+- **constraint-aware state machine (WAITING / TRACKING / LOCKED)**  
+- **failure classification (SUN_LIMIT vs LEG_LIMIT)**  
+- **visual feedback through color-coded states**  
+- live **system diagnostics panel**
+---
+# System Behavior
+
+The simulation includes a **state-based control system** that determines how the panel behaves under different physical constraints.
+
+### States
+
+- **WAITING**
+  - The system has not yet encountered a valid configuration.
+  - The panel remains inactive while waiting for feasible conditions.
+
+- **TRACKING**
+  - The panel successfully aligns with the Sun.
+  - All actuator (leg) constraints are satisfied.
+  - The system actively updates orientation in real-time.
+
+- **LOCKED**
+  - The system was previously in a valid configuration but entered an infeasible region.
+  - The panel is held at the **last valid configuration**.
+  - No further motion is allowed until the simulation resets.
 
 ---
-
 # Technologies Used
 
 - **Python**
@@ -167,6 +193,9 @@ A machine learning model has been implemented to predict the **optimal solar pan
 
 The dataset used for training is generated from the physical simulation.
 
+The trained model is integrated into the simulation and used to predict the required panel orientation in real-time.
+
+
 ### Model Input Features
 
 - `sun_x`
@@ -215,9 +244,58 @@ The full academic study describing the mathematical modeling and simulation of t
 
 # Simulation Preview
 
-![Solar Tracking Simulation](images/simulation.gif)
+![Solar Tracking Simulation](images/solar_tracking.gif)
+
+
+The following animation demonstrates:
+
+- real-time solar tracking  
+- constraint-aware behavior  
+- actuator limit enforcement  
+- system state transitions  
 
 ---
+
+
+### Constraint Handling
+
+The system evaluates two types of constraints:
+
+- **Solar Constraint**
+  - Maximum allowable tilt angle
+  - Prevents unrealistic panel orientations
+
+- **Actuator (Leg Length) Constraint**
+  - Each leg must remain within:
+    ```
+    [LEG_MIN, LEG_MAX]
+    ```
+  - Violations indicate mechanical infeasibility
+
+---
+
+### Failure Classification
+
+The system not only detects constraint violations but also **identifies their cause**:
+
+- `SUN_LIMIT` → required tilt exceeds maximum allowed tilt  
+- `LEG_LIMIT` → actuator lengths exceed mechanical limits  
+
+These failure types are **visually distinguished in the simulation**:
+
+- Gray → solar constraint failure  
+- Red → actuator constraint failure  
+
+---
+
+### Cycle-Based Reset Logic
+
+The simulation operates in repeating cycles of solar motion.
+
+- When a new cycle begins:
+  - The system resets its state
+  - Previous lock conditions are cleared
+- This allows the system to re-evaluate feasible configurations dynamically
 
 # How to Run
 
@@ -247,12 +325,12 @@ Train the machine learning model
 
 Planned improvements include:
 
-- integrating ML predictions directly into the simulation  
-- comparing physics-based and ML-based control  
-- weather-aware solar tracking  
-- energy optimization experiments  
-- improved system monitoring and visualization  
-
+- constraint-aware machine learning models  
+- reinforcement learning for optimal tracking control  
+- dynamic modeling (forces, torque, actuator limits)  
+- wind and environmental disturbance modeling  
+- energy efficiency optimization  
+- real-world hardware implementation of the mechanism  
 ---
 
 # Author
