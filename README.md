@@ -195,7 +195,45 @@ The dataset used for training is generated from the physical simulation.
 
 The trained model is integrated into the simulation and used to predict the required panel orientation in real-time.
 
+## Control System & Constraint Handling
 
+To make the simulation more realistic and closer to a real-world system, additional control logic and physical constraints were implemented.
+
+### State Machine
+
+The system operates using a simple state machine:
+
+- **WAITING** → System is idle or waiting for valid tracking conditions  
+- **TRACKING** → Panel actively follows the Sun  
+- **LOCKED** → System stops due to physical or geometric limitations  
+
+### Constraint Handling
+
+Two main constraints are considered:
+
+- **Sun Reachability (Tilt Limit)**  
+  The system checks whether the required panel orientation is physically achievable.
+
+- **Actuator Limits (Leg Length Constraints)**  
+  Each leg has minimum and maximum length limits.  
+  If any leg exceeds these limits, the configuration is considered invalid.
+
+### Failure Classification
+
+Failures are classified into two categories:
+
+- **SUN_LIMIT** → Target orientation exceeds tilt capability  
+- **LEG_LIMIT** → Required leg lengths are outside actuator limits  
+
+### Visual Feedback
+
+The simulation provides real-time visual feedback:
+
+- 🟢 Tracking → Normal operation  
+- 🟡 Waiting → Idle state  
+- 🔴 Locked → Constraint violation  
+
+This allows easy monitoring of system behavior during simulation.
 ### Model Input Features
 
 - `sun_x`
