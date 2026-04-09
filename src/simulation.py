@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import joblib
 import itertools
+import requests
+
 
 from kinematics import get_bpts, get_ipts, get_panel, br, max_s
 
@@ -27,13 +29,20 @@ LEG_MAX = 140
 # ML Prediction
 # -------------------------
 def predict_panel_zenith(sx, sy, sz):
-    x = pd.DataFrame([{
+    url = "http://127.0.0.1:8000/predict"
+
+    payload = {
         "sun_x": sx,
         "sun_y": sy,
         "sun_z": sz
-    }])
-    pred = model.predict(x)[0]
-    return pred
+    }
+
+    response = requests.post(url, json=payload)
+
+    prediction = response.json()["predicted_zenith"]
+    return prediction
+
+
 
 
 def build_ml_target_vector(sx, sy, sz, predicted_zenith_deg, radius=120):

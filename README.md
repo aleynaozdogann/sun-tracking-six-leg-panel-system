@@ -34,6 +34,11 @@ R² Score ≈ **0.99**
 - Constraint-aware state machine (WAITING / TRACKING / LOCKED)  
 - Failure classification (SUN_LIMIT vs LEG_LIMIT)  
 
+**API Deployment**
+
+- FastAPI-based prediction service
+- `/predict` endpoint for panel zenith prediction
+- JSON request/response support
 ---
 
 # Project Overview
@@ -143,7 +148,10 @@ The simulation includes a **state-based control system** that determines how the
 - **NumPy** — numerical computation
 - **Matplotlib** — 3D visualization and animation
 - **scikit-learn** — machine learning model training
-
+- **FastAPI** — serving machine learning predictions as an API
+- **Uvicorn** — running the API service
+- **Pandas** — formatting model input data
+- **Requests** — connecting the simulation to the API
 ---
 
 # Project Structure
@@ -161,12 +169,14 @@ Sun-tracking-six-leg-panel-system
 │   └── ml_prediction.png
 │
 ├── src/
+│   ├── api.py
 │   ├── main.py
 │   ├── simulation.py
 │   ├── kinematics.py
 │   ├── solar_math.py
 │   ├── train_model.py
-│   └── utils.py
+│   ├── utils.py
+│   └── solar_tracking_model.pkl
 │
 ├── README.md
 ├── requirements.txt
@@ -194,6 +204,34 @@ A machine learning model has been implemented to predict the **optimal solar pan
 The dataset used for training is generated from the physical simulation.
 
 The trained model is integrated into the simulation and used to predict the required panel orientation in real-time.
+# API Integration
+
+To make the system more modular and closer to real-world engineering workflows, the trained machine learning model was deployed as a **FastAPI-based prediction service**.
+
+The API provides a prediction endpoint that receives the Sun direction vector and returns the predicted optimal panel zenith angle.
+
+### Endpoint
+
+POST /predict
+
+The API is used by the simulation to retrieve real-time predictions.
+### Example Request
+
+~~~json
+{
+  "sun_x": 0.5,
+  "sun_y": 0.3,
+  "sun_z": 0.8
+}
+~~~
+
+### Example Response
+
+~~~json
+{
+  "predicted_zenith": 53.13
+}
+~~~
 
 ## Control System & Constraint Handling
 
@@ -207,23 +245,6 @@ The system operates using a simple state machine:
 - **TRACKING** → Panel actively follows the Sun  
 - **LOCKED** → System stops due to physical or geometric limitations  
 
-### Constraint Handling
-
-Two main constraints are considered:
-
-- **Sun Reachability (Tilt Limit)**  
-  The system checks whether the required panel orientation is physically achievable.
-
-- **Actuator Limits (Leg Length Constraints)**  
-  Each leg has minimum and maximum length limits.  
-  If any leg exceeds these limits, the configuration is considered invalid.
-
-### Failure Classification
-
-Failures are classified into two categories:
-
-- **SUN_LIMIT** → Target orientation exceeds tilt capability  
-- **LEG_LIMIT** → Required leg lengths are outside actuator limits  
 
 ### Visual Feedback
 
@@ -349,13 +370,23 @@ Install dependencies
 
 `pip install -r requirements.txt`
 
+Train the machine learning model
+
+`python src/train_model.py`
+
+Run the API
+
+`uvicorn src.api:app --reload`
+
+Open API docs in your browser
+
+http://127.0.0.1:8000/docs
+
 Run the simulation
 
 `python src/main.py`
 
-Train the machine learning model
-
-`python src/train_model.py`
+Note: The API must be running before starting the simulation.
 
 ---
 
@@ -369,6 +400,9 @@ Planned improvements include:
 - wind and environmental disturbance modeling  
 - energy efficiency optimization  
 - real-world hardware implementation of the mechanism  
+- web-based control dashboard for live solar tracking
+- cloud deployment of the prediction API
+- real-time hardware integration
 ---
 
 # Author
