@@ -40,6 +40,55 @@ R² Score ≈ **0.99**
 - `/predict` endpoint for panel zenith prediction
 - JSON request/response support
 ---
+## Live API & Deployment
+
+This project has been extended into a **production-ready system** by deploying the trained machine learning model as a live API.
+
+The API enables real-time prediction of the optimal solar panel orientation based on the Sun direction vector.
+
+---
+
+### API Endpoints
+
+**Base URL**
+
+https://sun-tracking-six-leg-panel-system.onrender.com
+
+**Interactive Documentation (Swagger UI)**
+
+https://sun-tracking-six-leg-panel-system.onrender.com/docs
+
+---
+
+### Example Usage
+
+You can send a POST request to the `/predict` endpoint with a Sun direction vector.
+
+#### Request
+
+    {
+      "sun_x": 0.5,
+      "sun_y": 0.3,
+      "sun_z": 0.8
+    }
+
+#### Response
+
+    {
+      "predicted_zenith": 53.13
+    }
+
+---
+
+### Deployment Stack
+
+The API is deployed using:
+
+- FastAPI  
+- Uvicorn  
+- Render  
+
+This allows the model to be accessed remotely without running the simulation locally.
 
 # Project Overview
 
@@ -209,6 +258,8 @@ The trained model is integrated into the simulation and used to predict the requ
 To make the system more modular and closer to real-world engineering workflows, the trained machine learning model was deployed as a **FastAPI-based prediction service**.
 
 The API provides a prediction endpoint that receives the Sun direction vector and returns the predicted optimal panel zenith angle.
+
+This API is deployed and publicly accessible via Render.
 
 ### Endpoint
 
