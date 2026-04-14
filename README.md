@@ -89,6 +89,36 @@ The API is deployed using:
 - Render  
 
 This allows the model to be accessed remotely without running the simulation locally.
+---
+
+# Web Interface (Frontend Demo)
+
+The project has been extended with a simple web-based user interface that allows real-time interaction with the machine learning model.
+
+Users can:
+
+- Input the Sun direction vector (`sun_x`, `sun_y`, `sun_z`)
+- Send requests to the deployed FastAPI backend
+- Receive real-time predictions
+- Visualize the predicted panel orientation
+
+### Features
+
+- Clean and minimal UI
+- Real-time API communication
+- Interactive prediction system
+- Dynamic result display
+
+### Example Workflow
+
+1. User enters Sun vector values
+2. Frontend sends a POST request to the API
+3. Backend predicts the optimal panel angle
+4. Result is displayed instantly on the interface
+
+### Screenshot
+
+(Add a screenshot here later)
 
 # Project Overview
 
@@ -454,6 +484,13 @@ Planned improvements include:
 - web-based control dashboard for live solar tracking
 - cloud deployment of the prediction API
 - real-time hardware integration
+---
+
+
+# Frontend Preview (Coming Soon)
+
+A visual interface is currently under development to display real-time panel orientation and system behavior.
+
 ---
 
 # Author
