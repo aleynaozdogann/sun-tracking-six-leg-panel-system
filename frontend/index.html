@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Solar Tracking</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+    }
+
+    .container {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 30px;
+      border-radius: 16px;
+      width: 380px;
+    }
+
+    .input-group {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 14px;
+  color: #cbd5f5;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  font-size: 14px;
+}
+
+.btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: #f59e0b;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.btn:hover {
+  background: #fbbf24;
+}
+
+
+  </style>
+</head>
+
+  <body>
+
+  <div class="container">
+    <div class="card">
+      <h1>AI Solar Tracking System</h1>
+      <p class="subtitle">Predict panel response from sun vector inputs.</p>
+
+      <form id="solar-form" class="form">
+        <div class="input-group">
+          <label for="sun_x">Sun X</label>
+          <input type="number" id="sun_x" step="any">
+        </div>
+
+        <div class="input-group">
+          <label for="sun_y">Sun Y</label>
+          <input type="number" id="sun_y" step="any">
+        </div>
+
+        <div class="input-group">
+          <label for="sun_z">Sun Z</label>
+          <input type="number" id="sun_z" step="any">
+        </div>
+
+        <button type="submit" class="btn">Predict</button>
+      </form>
+
+      <div class="result-box">
+        <h2>Result</h2>
+        <p id="result-text">Result will appear here</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("solar-form");
+
+    form.addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const sunX = parseFloat(document.getElementById("sun_x").value);
+      const sunY = parseFloat(document.getElementById("sun_y").value);
+      const sunZ = parseFloat(document.getElementById("sun_z").value);
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/predict", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            sun_x: sunX,
+            sun_y: sunY,
+            sun_z: sunZ
+          })
+        });
+
+        const data = await response.json();
+
+        console.log("API response:", data);
+
+        const resultText = document.getElementById("result-text");
+        resultText.textContent = "Predicted Zenith: " + data.predicted_zenith.toFixed(2);
+
+      } catch (error) {
+        console.error("Error:", error);
+        alert("Error connecting to API.");
+      }
+    });
+  </script>
+
+</body>
+</html>
