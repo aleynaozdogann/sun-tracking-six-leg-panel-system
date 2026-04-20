@@ -23,50 +23,64 @@
       background: #1e293b;
       padding: 30px;
       border-radius: 16px;
-      width: 380px;
+      width: 420px;
     }
 
     .input-group {
-  margin-bottom: 15px;
-}
+      margin-bottom: 15px;
+    }
 
-label {
-  display: block;
-  margin-bottom: 5px;
-  font-size: 14px;
-  color: #cbd5f5;
-}
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #cbd5f5;
+    }
 
-input {
-  width: 100%;
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
-  outline: none;
-  font-size: 14px;
-}
+    input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
 
-.btn {
-  width: 100%;
-  padding: 12px;
-  border: none;
-  border-radius: 10px;
-  background: #f59e0b;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 10px;
-}
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      background: #f59e0b;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
 
-.btn:hover {
-  background: #fbbf24;
-}
+    .btn:hover {
+      background: #fbbf24;
+    }
 
+    .result-box {
+      margin-top: 24px;
+    }
 
+    #result-text {
+      white-space: pre-line;
+      line-height: 1.6;
+      color: #e2e8f0;
+    }
+
+    .note {
+      margin-top: 12px;
+      font-size: 13px;
+      color: #94a3b8;
+    }
   </style>
 </head>
 
-  <body>
-
+<body>
   <div class="container">
     <div class="card">
       <h1>AI Solar Tracking System</h1>
@@ -94,6 +108,7 @@ input {
       <div class="result-box">
         <h2>Result</h2>
         <p id="result-text">Result will appear here</p>
+        <p class="note">Analytic zenith is the physical reference. ML estimate is shown for comparison.</p>
       </div>
     </div>
   </div>
@@ -108,6 +123,13 @@ input {
       const sunY = parseFloat(document.getElementById("sun_y").value);
       const sunZ = parseFloat(document.getElementById("sun_z").value);
 
+      const resultText = document.getElementById("result-text");
+
+      if (Number.isNaN(sunX) || Number.isNaN(sunY) || Number.isNaN(sunZ)) {
+        resultText.textContent = "Please enter valid numeric values for all inputs.";
+        return;
+      }
+
       try {
         const response = await fetch("http://127.0.0.1:8000/predict", {
           method: "POST",
@@ -121,19 +143,28 @@ input {
           })
         });
 
+        if (!response.ok) {
+          throw new Error("API request failed");
+        }
+
         const data = await response.json();
 
         console.log("API response:", data);
 
-        const resultText = document.getElementById("result-text");
-        resultText.textContent = "Predicted Zenith: " + data.predicted_zenith.toFixed(2);
+        const predicted = Number(data.predicted_zenith);
+        const analytic = Number(data.analytic_zenith);
+        const error = Math.abs(analytic - predicted);
+
+        resultText.textContent =
+          `Required Zenith: ${analytic.toFixed(2)}°\n` +
+          `ML Estimate: ${predicted.toFixed(2)}°\n` +
+          `Error: ${error.toFixed(2)}°`;
 
       } catch (error) {
         console.error("Error:", error);
-        alert("Error connecting to API.");
+        resultText.textContent = "Error connecting to API.";
       }
     });
   </script>
-
 </body>
 </html>

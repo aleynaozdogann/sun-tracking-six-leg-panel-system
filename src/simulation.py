@@ -1,64 +1,53 @@
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import joblib
-import itertools
-import requests
-
 
 from kinematics import get_bpts, get_ipts, get_panel, br, max_s
 
 leg_names = ["RED", "GREEN", "BLUE"]
 
-# -------------------------
-# Model Load
-# -------------------------
+# =========================
+# MODEL LOAD
+# =========================
 model = joblib.load("solar_tracking_model.pkl")
 print("Loaded model:", model)
 print("Model type:", type(model))
 
-# -------------------------
-# Leg Constraints
-# -------------------------
+# =========================
+# LEG CONSTRAINTS
+# =========================
 LEG_MIN = 40
 LEG_MAX = 140
 
 
-# -------------------------
-# ML Prediction
-# -------------------------
-def predict_panel_zenith(sx, sy, sz):
-    url = "http://127.0.0.1:8000/predict"
+# =========================
+# TARGET VECTOR BUILDER
+# =========================
+def build_target_vector_with_stable_azimuth(
+    sx, sy, sz, target_zenith_deg, last_azimuth, radius=120
+):
+    xy_norm = np.sqrt(sx**2 + sy**2)
 
-    payload = {
-        "sun_x": sx,
-        "sun_y": sy,
-        "sun_z": sz
-    }
+    # Güneş tepedeyken azimuth kararsız olur, eski açıyı koru
+    if xy_norm < 1e-6:
+        azimuth = last_azimuth
+    else:
+        azimuth = np.arctan2(sy, sx)
 
-    response = requests.post(url, json=payload)
-
-    prediction = response.json()["predicted_zenith"]
-    return prediction
-
-
-
-
-def build_ml_target_vector(sx, sy, sz, predicted_zenith_deg, radius=120):
-    azimuth = np.arctan2(sy, sx)
-    zenith_rad = np.radians(predicted_zenith_deg)
+    zenith_rad = np.radians(target_zenith_deg)
 
     new_sx = radius * np.sin(zenith_rad) * np.cos(azimuth)
     new_sy = radius * np.sin(zenith_rad) * np.sin(azimuth)
     new_sz = radius * np.cos(zenith_rad)
 
-    return np.array([new_sx, new_sy, new_sz])
+    vec = np.array([new_sx, new_sy, new_sz], dtype=float)
+    return vec, azimuth
 
 
-# -------------------------
-# Leg Length Check
-# -------------------------
+# =========================
+# LEG LENGTH CHECK
+# =========================
 def compute_leg_lengths(bpts, ipts):
     lengths = []
     for k in range(3):
@@ -81,9 +70,9 @@ def check_leg_constraints(lengths, leg_min=LEG_MIN, leg_max=LEG_MAX):
             return False
     return True
 
+
 def get_leg_status_messages(lengths, leg_min=LEG_MIN, leg_max=LEG_MAX):
     messages = []
-    leg_names = ["RED", "GREEN", "BLUE"]
 
     for k, (right_len, left_len) in enumerate(lengths):
         name = leg_names[k]
@@ -104,9 +93,9 @@ def get_leg_status_messages(lengths, leg_min=LEG_MIN, leg_max=LEG_MAX):
     return messages
 
 
-# -------------------------
-# Main Simulation
-# -------------------------
+# =========================
+# MAIN SIMULATION
+# =========================
 def run_simulation():
     fig = plt.figure(figsize=(13, 8))
     ax = fig.add_subplot(111, projection='3d')
@@ -118,11 +107,10 @@ def run_simulation():
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_zlabel("Z")
-    ax.set_title("ML-Based Solar Tracking with Leg-Length Constraints")
+    ax.set_title("Solar Tracking Simulation")
 
-    # -------------------------
-    # Base disk
-    # -------------------------
+    ax.view_init(elev=28, azim=-45)
+
     theta = np.linspace(0, 2 * np.pi, 60)
     r = np.linspace(0, br, 20)
     T, R = np.meshgrid(theta, r)
@@ -137,33 +125,21 @@ def run_simulation():
 
     bpts = get_bpts()
 
-    # -------------------------
-    # Static base points
-    # -------------------------
-    ax.scatter(bpts[:, 0], bpts[:, 1], bpts[:, 2], c="darkgreen", s=40, label="Base Points")
+    ax.scatter(
+        bpts[:, 0], bpts[:, 1], bpts[:, 2],
+        c="darkgreen", s=40, label="Base Points"
+    )
 
-    # -------------------------
-    # Objects
-    # -------------------------
     sun_scatter = ax.scatter([], [], [], c="orange", s=400, edgecolors="yellow")
     ipts_scatter = ax.scatter([], [], [], c="black", s=25)
 
-    link_colors = [
-        (1, 0, 0),
-        (0, 1, 0),
-        (0, 0, 1)
-    ]
+    link_colors = [(1, 0, 0), (0, 1, 0), (0, 0, 1)]
 
     leg_lines = []
     for k in range(3):
         ln, = ax.plot([], [], [], color=link_colors[k], linewidth=2)
         leg_lines.append(ln)
 
-
-
-    # -------------------------
-    # Text blocks
-    # -------------------------
     sun_text = ax.text2D(
         1.05, 0.95, "", transform=ax.transAxes,
         fontsize=10, va="top", color="orange"
@@ -171,7 +147,6 @@ def run_simulation():
 
     leg_texts = []
     y_positions = [0.90, 0.75, 0.60]
-
     for k in range(3):
         t = ax.text2D(
             1.05, y_positions[k], "", transform=ax.transAxes,
@@ -190,142 +165,56 @@ def run_simulation():
     )
 
     panel_surf = None
-
-    last_valid_ipts = None
-    last_valid_PX = None
-    last_valid_PY = None
-    last_valid_PZ = None
-    last_valid_tilt_deg = None
-    last_valid_leg_lengths = None
-
-    locked_out = False
-    current_cycle = -1
-    seen_valid_in_cycle = False
+    last_azimuth = 0.0
 
     def update(frame):
-        nonlocal panel_surf
-        nonlocal last_valid_ipts, last_valid_PX, last_valid_PY, last_valid_PZ
-        nonlocal last_valid_tilt_deg, last_valid_leg_lengths
-        nonlocal locked_out, current_cycle, seen_valid_in_cycle
+        nonlocal panel_surf, last_azimuth
 
         total = 200
-        cycle = frame // total
-        local_frame = frame % total
+        ang = (frame - total / 2) / (total / 2)
 
-        if cycle != current_cycle:
-            current_cycle = cycle
-            locked_out = False
-            seen_valid_in_cycle = False
-
-            last_valid_ipts = None
-            last_valid_PX = None
-            last_valid_PY = None
-            last_valid_PZ = None
-            last_valid_tilt_deg = None
-            last_valid_leg_lengths = None
-
-        ang = (local_frame - total / 2) / (total / 2)
-
-        # -------------------------
         # Sun position
-        # -------------------------
         sx = -120 * np.sin(ang)
         sy = -80 * np.sin(ang)
         sz = 120 * np.cos(ang)
 
-        sun = np.array([sx, sy, sz])
+        sun = np.array([sx, sy, sz], dtype=float)
         sun_norm = sun / np.linalg.norm(sun)
 
-        required_deg = np.degrees(np.arccos(np.clip(sun_norm[2], -1.0, 1.0)))
+        required_deg = np.degrees(
+            np.arccos(np.clip(sun_norm[2], -1.0, 1.0))
+        )
         max_tilt_deg = np.degrees(max_s)
 
-        # -------------------------
-        # ML prediction
-        # -------------------------
-        predicted_deg = predict_panel_zenith(sx, sy, sz)
-        predicted_deg = np.clip(predicted_deg, 0, max_tilt_deg)
+        # Şimdilik smooth çalışan fiziksel açı
+        target_deg = np.clip(required_deg, 0, max_tilt_deg)
 
-        ml_sun = build_ml_target_vector(
-            sx, sy, sz,
-            predicted_deg,
-            radius=np.linalg.norm(sun)
+        target_vec, last_azimuth = build_target_vector_with_stable_azimuth(
+            sx, sy, sz, target_deg, last_azimuth, radius=np.linalg.norm(sun)
         )
 
-        # -------------------------
-        # Geometry
-        # -------------------------
-        ipts = get_ipts(ml_sun)
-        real_normal, normal, PX, PY, PZ = get_panel(ipts, ml_sun)
+        ipts = get_ipts(target_vec)
+        real_normal, normal, PX, PY, PZ = get_panel(ipts, target_vec)
 
-        tilt_deg = np.degrees(np.arccos(np.clip(normal[2], -1.0, 1.0)))
+        tilt_deg = np.degrees(
+            np.arccos(np.clip(normal[2], -1.0, 1.0))
+        )
 
-        # -------------------------
-        # Constraint checks
-        # -------------------------
         leg_lengths = compute_leg_lengths(bpts, ipts)
         legs_valid = check_leg_constraints(leg_lengths)
         leg_status_messages = get_leg_status_messages(leg_lengths)
-        sun_valid = required_deg < max_tilt_deg
-        print(
-            f"frame={frame}, cycle={cycle}, local={local_frame}, "
-            f"sun_valid={sun_valid}, legs_valid={legs_valid}, locked_out={locked_out}"
-        )
 
-        current_valid = sun_valid and legs_valid
+        sun_valid = required_deg <= max_tilt_deg
+        status = "TRACKING" if (sun_valid and legs_valid) else "OUT OF RANGE"
+
         fail_reason = None
-
         if not sun_valid:
             fail_reason = "SUN_LIMIT"
         elif not legs_valid:
             fail_reason = "LEG_LIMIT"
 
-        if not locked_out:
-            if current_valid:
-                status = "TRACKING"
-                seen_valid_in_cycle = True
-
-                last_valid_ipts = ipts.copy()
-                last_valid_PX = PX.copy()
-                last_valid_PY = PY.copy()
-                last_valid_PZ = PZ.copy()
-                last_valid_tilt_deg = tilt_deg
-                last_valid_leg_lengths = list(leg_lengths)
-
-            else:
-                if not seen_valid_in_cycle:
-                    status = "WAITING"
-                else:
-                    status = "LOCKED"
-
-                    if last_valid_ipts is not None:
-                        locked_out = True
-                        ipts = last_valid_ipts
-                        PX = last_valid_PX
-                        PY = last_valid_PY
-                        PZ = last_valid_PZ
-                        tilt_deg = last_valid_tilt_deg
-                        leg_lengths = list(last_valid_leg_lengths)
-
-        else:
-            status = "LOCKED"
-
-            if last_valid_ipts is not None:
-                ipts = last_valid_ipts
-                PX = last_valid_PX
-                PY = last_valid_PY
-                PZ = last_valid_PZ
-                tilt_deg = last_valid_tilt_deg
-                leg_lengths = list(last_valid_leg_lengths)
-        # -------------------------
-        # Color logic
-        # -------------------------
-        if status == "LOCKED":
-            if fail_reason == "LEG_LIMIT":
-                panel_color = "red"  # 🔥 bacak problemi
-            elif fail_reason == "SUN_LIMIT":
-                panel_color = "gray"  # 🌑 güneş limiti
-            else:
-                panel_color = "gray"
+        if status == "OUT OF RANGE":
+            panel_color = "red" if fail_reason == "LEG_LIMIT" else "gray"
 
             tilt_text.set_color("gray")
             sun_text.set_color("gray")
@@ -335,20 +224,7 @@ def run_simulation():
             for k in range(3):
                 leg_texts[k].set_color("gray")
                 leg_lines[k].set_color("gray")
-
-        elif status == "WAITING":
-            panel_color = "lightsteelblue"
-
-            tilt_text.set_color("purple")
-            sun_text.set_color("orange")
-            ipts_scatter.set_color("black")
-            constraint_text.set_color("purple")
-
-            for k in range(3):
-                leg_texts[k].set_color(link_colors[k])
-                leg_lines[k].set_color(link_colors[k])
-
-        else:  # TRACKING
+        else:
             panel_color = "dodgerblue"
 
             tilt_text.set_color("red")
@@ -360,15 +236,9 @@ def run_simulation():
                 leg_texts[k].set_color(link_colors[k])
                 leg_lines[k].set_color(link_colors[k])
 
-        # -------------------------
-        # Update scatters
-        # -------------------------
         sun_scatter._offsets3d = ([sx], [sy], [sz])
         ipts_scatter._offsets3d = (ipts[:, 0], ipts[:, 1], ipts[:, 2])
 
-        # -------------------------
-        # Update leg lines + text
-        # -------------------------
         for k in range(3):
             base = bpts[k]
             panel_pt = ipts[k]
@@ -383,10 +253,8 @@ def run_simulation():
             )
 
             right_len, left_len = leg_lengths[k]
-
             right_ok = LEG_MIN <= right_len <= LEG_MAX
             left_ok = LEG_MIN <= left_len <= LEG_MAX
-
             name = leg_names[k]
 
             leg_texts[k].set_text(
@@ -395,9 +263,6 @@ def run_simulation():
                 f"L: {left_len:.1f} ({'OK' if left_ok else 'X'})"
             )
 
-        # -------------------------
-        # Redraw panel
-        # -------------------------
         if panel_surf is not None:
             panel_surf.remove()
 
@@ -408,12 +273,9 @@ def run_simulation():
             linewidth=0.5
         )
 
-        # -------------------------
-        # Info text
-        # -------------------------
         tilt_text.set_text(
             f"Max Zenith: {max_tilt_deg:5.2f}\n"
-            f"Predicted Zenith: {predicted_deg:5.2f}\n"
+            f"Target Zenith: {target_deg:5.2f}\n"
             f"Panel Zenith: {tilt_deg:5.2f}\n"
             f"Required Zenith: {required_deg:5.2f}\n"
             f"Sun Valid: {sun_valid}\n"
@@ -421,8 +283,8 @@ def run_simulation():
             f"Leg Range: [{LEG_MIN}, {LEG_MAX}]\n"
             f"Status: {status}"
         )
-        extra = f"\nFail: {fail_reason}" if fail_reason else ""
 
+        extra = f"\nFail: {fail_reason}" if fail_reason else ""
         constraint_text.set_text(
             "Constraint Info:\n" +
             "\n".join(leg_status_messages) +
@@ -434,22 +296,25 @@ def run_simulation():
         )
 
         print(
-            f"Cycle {cycle} | LocalFrame {local_frame:03d} | " 
-            f"Pred={predicted_deg:.2f} | "
+            f"Frame {frame:03d} | "
+            f"Target={target_deg:.2f} | "
             f"Req={required_deg:.2f} | "
             f"Panel={tilt_deg:.2f} | "
-            f"Legs={[(round(r, 2), round(l, 2)) for r, l in leg_lengths]} | "
-            f"SunValid={sun_valid} | LegsValid={legs_valid} | Status={status}"
+            f"Status={status}"
         )
 
-        return leg_lines + [sun_scatter, ipts_scatter, panel_surf] + leg_texts + [sun_text, tilt_text, constraint_text]
+        return (
+            leg_lines
+            + [sun_scatter, ipts_scatter, panel_surf]
+            + leg_texts
+            + [sun_text, tilt_text, constraint_text]
+        )
 
     ani = animation.FuncAnimation(
         fig,
         update,
-        frames=itertools.count(),
-        interval=70,
-        repeat=False
+        frames=200,
+        interval=70
     )
 
     plt.tight_layout()

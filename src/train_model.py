@@ -13,7 +13,7 @@ def train_model():
     print(df["panel_zenith_deg"].describe())
 
     x = df[["sun_x", "sun_y", "sun_z"]]
-    y = df["panel_zenith_deg"]
+    y = df["required_zenith_deg"]
 
     x_train, x_test, y_train, y_test = train_test_split(
         x, y,

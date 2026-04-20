@@ -12,29 +12,26 @@ def generate_dataset(output_path="../data/solar_tracking_dataset.csv", total_fra
     max_tilt_deg = np.degrees(max_s)
 
     for frame in range(total_frames):
-        ang = (frame - total_frames / 2) / (total_frames / 2)
+        # random sun vector
+        sx = np.random.uniform(-1, 1)
+        sy = np.random.uniform(-1, 1)
+        sz = np.random.uniform(0, 1)  # güneş yukarıda
 
-        # Sun position
-        sx = -120 * np.sin(ang)
-        sy = -80 * np.sin(ang)
-        sz = 120 * np.cos(ang)
-        sun = np.array([sx, sy, sz])
+        # normalize
+        norm = np.linalg.norm([sx, sy, sz])
+        sx, sy, sz = sx / norm, sy / norm, sz / norm
+
+
+        sun = np.array([sx * 120, sy * 120, sz * 120])
 
         # Panel points and panel geometry
-        ipts = get_ipts(sun)
-        real_normal, normal, _, _, _ = get_panel(ipts, sun)
+        sun_norm = sun / np.linalg.norm(sun)
 
-        required_deg = np.degrees(np.arccos(real_normal[2]))
-        tilt_deg = np.degrees(np.arccos(normal[2]))
+        required_deg = np.degrees(np.arccos(np.clip(sun_norm[2], -1.0, 1.0)))
+        tilt_deg = required_deg
         status = "TRACKING" if required_deg < max_tilt_deg else "OUT OF RANGE"
 
-        # Leg lengths
-        leg_lengths = []
-        for k in range(3):
-            base = bpts[k]
-            panel_pt = ipts[k]
-            length = np.linalg.norm(panel_pt - base)
-            leg_lengths.append(length)
+
 
         records.append({
             "frame": frame,
@@ -45,9 +42,7 @@ def generate_dataset(output_path="../data/solar_tracking_dataset.csv", total_fra
             "panel_zenith_deg": tilt_deg,
             "max_zenith_deg": max_tilt_deg,
             "status": status,
-            "leg_1_length": leg_lengths[0],
-            "leg_2_length": leg_lengths[1],
-            "leg_3_length": leg_lengths[2],
+
         })
 
     df = pd.DataFrame(records)

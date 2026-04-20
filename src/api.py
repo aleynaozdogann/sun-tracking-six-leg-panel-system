@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import joblib
 import pandas as pd
+import numpy as np
 from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -23,6 +24,7 @@ class SunVector(BaseModel):
 def home():
     return {"message": "Solar Tracking API is running"}
 
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -30,6 +32,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def calculate_required_zenith(sx, sy, sz):
+    sun = np.array([sx, sy, sz], dtype=float)
+    norm = np.linalg.norm(sun)
+
+    if norm == 0:
+        return 0.0
+
+    sun_z_normalized = sun[2] / norm
+    sun_z_normalized = np.clip(sun_z_normalized, -1.0, 1.0)
+
+    zenith_deg = np.degrees(np.arccos(sun_z_normalized))
+    return float(zenith_deg)
+
 
 @app.post("/predict")
 def predict(data: SunVector):
@@ -41,6 +58,22 @@ def predict(data: SunVector):
 
     prediction = model.predict(x)[0]
 
+    analytic_zenith = calculate_required_zenith(
+        data.sun_x,
+        data.sun_y,
+        data.sun_z
+    )
+
+    print("INPUT:")
+    print(x)
+
+    print("ML PREDICTION:")
+    print(prediction)
+
+    print("ANALYTIC ZENITH:")
+    print(analytic_zenith)
+
     return {
-        "predicted_zenith": float(prediction)
+        "predicted_zenith": float(prediction),
+        "analytic_zenith": analytic_zenith
     }

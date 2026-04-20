@@ -1,5 +1,7 @@
 import numpy as np
 
+print("KINEMATICS FILE IS RUNNING - TEST 67890")
+
 # --- PARAMETERS ---
 br = 30.0
 pr = 15.0
