@@ -1,505 +1,205 @@
-# Sun-Tracking Six-Leg Panel System
-## Mathematical Modeling, 3D Simulation and Machine Learning for Solar Tracking
+# AI Solar Tracking System
 
-This project presents the **mathematical modeling, kinematic analysis, and real-time 3D simulation** of a sun-tracking solar panel system driven by a **six-leg parallel mechanism inspired by the Stewart platform architecture**.
+Machine-learning assisted solar panel tracking platform featuring real-time 3D simulation, FastAPI deployment, and interactive web interface.
 
-The system dynamically adjusts the orientation of the solar panel so that its **normal vector aligns with the Sun's direction**, maximizing solar energy exposure.
-
-The project originated as an **academic mathematical modeling study** and is now being extended into a **simulation-driven engineering project with machine learning integration**.
+This project combines **mathematical modeling**, **simulation engineering**, and **machine learning** to optimize solar panel orientation based on the Sun direction vector.
 
 ---
 
-# Quick Summary
+## Highlights
 
-This project combines **mathematical modeling, simulation engineering, and machine learning** to study optimal solar panel orientation.
-
-**Simulation**
-
-- Six-leg Stewart platform inspired mechanism  
-- Real-time 3D visualization  
-- Dynamic Sun motion  
-
-**Machine Learning**
-
-- Model: Random Forest Regressor  
-- Input: `sun_x`, `sun_y`, `sun_z`  
-- Output: `panel_zenith_deg`  
-
-**Current Model Performance**
-
-R² Score ≈ **0.99**
-
-**Control System**
-
-- Constraint-aware state machine (WAITING / TRACKING / LOCKED)  
-- Failure classification (SUN_LIMIT vs LEG_LIMIT)  
-
-**API Deployment**
-
-- FastAPI-based prediction service
-- `/predict` endpoint for panel zenith prediction
-- JSON request/response support
----
-## Live API & Deployment
-
-This project has been extended into a **production-ready system** by deploying the trained machine learning model as a live API.
-
-The API enables real-time prediction of the optimal solar panel orientation based on the Sun direction vector.
+* Real-time 3D six-leg solar tracking simulation
+* Stewart-platform inspired mechanism
+* Machine learning angle prediction using Random Forest Regressor
+* R² Score ≈ 0.99999
+* Prediction error reduced to ~0.1°
+* FastAPI REST API deployment
+* Interactive frontend demo
+* Constraint-aware tracking logic
+* Mechanical tilt and actuator limit validation
 
 ---
 
-### API Endpoints
+## Demo Preview
 
-**Base URL**
+### Web Interface
 
-https://sun-tracking-six-leg-panel-system.onrender.com
+![Frontend Demo](images/frontend_demo.png)
 
-**Interactive Documentation (Swagger UI)**
+### Simulation
 
-https://sun-tracking-six-leg-panel-system.onrender.com/docs
+![Simulation](images/solar_tracking.gif)
 
----
+### ML Accuracy
 
-### Example Usage
-
-You can send a POST request to the `/predict` endpoint with a Sun direction vector.
-
-#### Request
-
-    {
-      "sun_x": 0.5,
-      "sun_y": 0.3,
-      "sun_z": 0.8
-    }
-
-#### Response
-
-    {
-      "predicted_zenith": 53.13
-    }
+![Prediction Accuracy](images/ml_prediction.png)
 
 ---
 
-### Deployment Stack
+## Project Architecture
 
-The API is deployed using:
-
-- FastAPI  
-- Uvicorn  
-- Render  
-
-This allows the model to be accessed remotely without running the simulation locally.
----
-
-# Web Interface (Frontend Demo)
-
-The project has been extended with a simple web-based user interface that allows real-time interaction with the machine learning model.
-
-Users can:
-
-- Input the Sun direction vector (`sun_x`, `sun_y`, `sun_z`)
-- Send requests to the deployed FastAPI backend
-- Receive real-time predictions
-- Visualize the predicted panel orientation
-
-### Features
-
-- Clean and minimal UI
-- Real-time API communication
-- Interactive prediction system
-- Dynamic result display
-
-### Example Workflow
-
-1. User enters Sun vector values
-2. Frontend sends a POST request to the API
-3. Backend predicts the optimal panel angle
-4. Result is displayed instantly on the interface
-
-### Screenshot
-
-(Add a screenshot here later)
-
-# Project Overview
-
-Solar panels generate maximum energy when their surface is perpendicular to incoming sunlight. Fixed panels or limited-axis tracking systems cannot maintain this optimal orientation throughout the day.
-
-This project develops a **six-degree-of-freedom (6-DOF) parallel mechanism model** capable of continuously adjusting the panel orientation to track the Sun.
-
-The work integrates:
-
-- mathematical modeling  
-- kinematic analysis  
-- numerical simulation  
-- real-time 3D visualization  
-- robotics-inspired mechanism design  
-
-The system simulates how a **Stewart platform based structure** could be used to control solar panel orientation in real-time.
+Frontend UI
+↓
+FastAPI Backend
+↓
+Trained ML Model
+↓
+Predicted Zenith Angle
+↓
+3D Simulation / Tracking Logic
 
 ---
 
-# Objectives
+## Machine Learning Model
 
-The main objectives of this project are:
+### Input Features
 
-- Develop a **mathematical model for a six-leg solar tracking mechanism**  
-- Compute **solar direction vectors over time**  
-- Align the **panel normal vector with the Sun**  
-- Calculate **required actuator leg lengths**  
-- Respect **mechanical tilt constraints**  
-- Visualize system behavior through **3D simulation**  
+* sun_x
+* sun_y
+* sun_z
 
----
+### Target
 
-# System Description
+* required_zenith_deg
 
-The simulated system consists of:
+### Model
 
-- a fixed circular **base platform**  
-- a movable circular **solar panel platform**  
-- **six adjustable legs** connecting base and panel  
-- a dynamic **Sun position vector**
+* Random Forest Regressor
 
-### At each simulation step
+### Performance
 
-1. The Sun position is calculated.  
-2. The panel normal vector is aligned with the Sun direction.  
-3. Tilt constraints are applied.  
-4. Panel attachment points are updated.  
-5. Leg vectors and lengths are calculated.  
-6. The system state is rendered in a **3D environment**.
+* R² ≈ 0.99999
+* Average prediction error ≈ 0.1°
+
+### Engineering Improvement
+
+Resolved real-world inference mismatch by aligning training data normalization with production API inputs.
 
 ---
 
-# Mathematical Modeling
+## Simulation Features
 
-The mathematical model is based on:
-
-- vector geometry  
-- coordinate transformations  
-- trigonometric relations  
-- rotation matrices  
-- orientation constraints  
-- Euclidean distance calculations  
-
-The panel orientation is determined so that the panel surface remains **orthogonal to the Sun direction**, while respecting mechanical tilt limitations.
+* Real-time animated Sun movement
+* Dynamic panel orientation tracking
+* Six-leg actuator geometry
+* Zenith tilt constraints
+* Leg length limit detection
+* Color-coded system states
+* Live diagnostics panel
 
 ---
 
-# Simulation Features
+## Tech Stack
 
-The simulation includes:
+### Languages & Libraries
 
-- real-time **3D visualization**  
-- animated **Sun motion**  
-- dynamic **panel orientation**  
-- continuous **leg length adjustment**  
-- mechanical **tilt constraint handling**  
-- **constraint-aware state machine (WAITING / TRACKING / LOCKED)**  
-- **failure classification (SUN_LIMIT vs LEG_LIMIT)**  
-- **visual feedback through color-coded states**  
-- live **system diagnostics panel**
----
-# System Behavior
+* Python
+* NumPy
+* Pandas
+* Matplotlib
+* scikit-learn
 
-The simulation includes a **state-based control system** that determines how the panel behaves under different physical constraints.
+### Backend
 
-### States
+* FastAPI
+* Uvicorn
 
-- **WAITING**
-  - The system has not yet encountered a valid configuration.
-  - The panel remains inactive while waiting for feasible conditions.
+### Frontend
 
-- **TRACKING**
-  - The panel successfully aligns with the Sun.
-  - All actuator (leg) constraints are satisfied.
-  - The system actively updates orientation in real-time.
+* HTML
+* CSS
+* JavaScript
 
-- **LOCKED**
-  - The system was previously in a valid configuration but entered an infeasible region.
-  - The panel is held at the **last valid configuration**.
-  - No further motion is allowed until the simulation resets.
+### Tools
 
----
-# Technologies Used
-
-- **Python**
-- **NumPy** — numerical computation
-- **Matplotlib** — 3D visualization and animation
-- **scikit-learn** — machine learning model training
-- **FastAPI** — serving machine learning predictions as an API
-- **Uvicorn** — running the API service
-- **Pandas** — formatting model input data
-- **Requests** — connecting the simulation to the API
----
-
-# Project Structure
-``` 
-Sun-tracking-six-leg-panel-system
-│
-├── data/
-│   └── solar_tracking_dataset.csv
-│
-├── docs/
-│   └── six_leg_panel_system.pdf
-│
-├── images/
-│   ├── simulation.gif
-│   └── ml_prediction.png
-│
-├── src/
-│   ├── api.py
-│   ├── main.py
-│   ├── simulation.py
-│   ├── kinematics.py
-│   ├── solar_math.py
-│   ├── train_model.py
-│   ├── utils.py
-│   └── solar_tracking_model.pkl
-│
-├── README.md
-├── requirements.txt
-└── .gitignore
-```
----
-
-# Synthetic Dataset Generation
-
-The simulation can generate a **synthetic dataset** by recording:
-
-- Sun position  
-- Panel tilt angle  
-- Tracking status  
-- Leg lengths  
-
-This dataset can be used for **machine learning based solar tracking optimization**.
+* Git
+* GitHub
+* PyCharm
 
 ---
 
-# Machine Learning Model
+## API Usage
 
-A machine learning model has been implemented to predict the **optimal solar panel zenith angle** from the Sun direction vector.
+### Run Locally
 
-The dataset used for training is generated from the physical simulation.
-
-The trained model is integrated into the simulation and used to predict the required panel orientation in real-time.
-# API Integration
-
-To make the system more modular and closer to real-world engineering workflows, the trained machine learning model was deployed as a **FastAPI-based prediction service**.
-
-The API provides a prediction endpoint that receives the Sun direction vector and returns the predicted optimal panel zenith angle.
-
-This API is deployed and publicly accessible via Render.
+uvicorn src.api:app --reload
 
 ### Endpoint
 
 POST /predict
 
-The API is used by the simulation to retrieve real-time predictions.
 ### Example Request
 
-~~~json
 {
-  "sun_x": 0.5,
-  "sun_y": 0.3,
-  "sun_z": 0.8
+"sun_x": 35,
+"sun_y": 69,
+"sun_z": 42
 }
-~~~
 
 ### Example Response
 
-~~~json
 {
-  "predicted_zenith": 53.13
+"predicted_zenith": 61.32,
+"analytic_zenith": 61.50
 }
-~~~
-
-## Control System & Constraint Handling
-
-To make the simulation more realistic and closer to a real-world system, additional control logic and physical constraints were implemented.
-
-### State Machine
-
-The system operates using a simple state machine:
-
-- **WAITING** → System is idle or waiting for valid tracking conditions  
-- **TRACKING** → Panel actively follows the Sun  
-- **LOCKED** → System stops due to physical or geometric limitations  
-
-
-### Visual Feedback
-
-The simulation provides real-time visual feedback:
-
-- 🟢 Tracking → Normal operation  
-- 🟡 Waiting → Idle state  
-- 🔴 Locked → Constraint violation  
-
-This allows easy monitoring of system behavior during simulation.
-### Model Input Features
-
-- `sun_x`
-- `sun_y`
-- `sun_z`
-
-These represent the **Sun direction vector in 3D space**.
-
-### Target Variable
-
-- `panel_zenith_deg`
-
-This represents the **optimal tilt angle of the solar panel** required to align the panel normal with the Sun direction.
-
-### Model Used
-
-Random Forest Regressor
-
-### Model Performance
-
-**R² Score ≈ 0.99**
-
-This indicates that the model successfully learns the relationship between the Sun vector and the required panel tilt angle.
 
 ---
 
-# Prediction Visualization
+## How to Run
 
-The following plot shows the relationship between the **real panel angle** and the **model prediction**.
+### Clone Repository
 
-Points close to the diagonal line indicate high model accuracy.
+git clone https://github.com/aleynaozdogann/sun-tracking-six-leg-panel-system.git
+cd sun-tracking-six-leg-panel-system
 
-![ML Prediction](images/ml_prediction.png)
+### Install Dependencies
 
----
+pip install -r requirements.txt
 
-# Academic Report
+### Train Model
 
-The full academic study describing the mathematical modeling and simulation of the system is available here:
+python src/train_model.py
 
-**Download PDF**
+### Run API
 
-[docs/six_leg_panel_system.pdf](docs/six_leg_panel_system.pdf)
+uvicorn src.api:app --reload
 
----
+### Run Simulation
 
-# Simulation Preview
-
-![Solar Tracking Simulation](images/solar_tracking.gif)
-
-
-The following animation demonstrates:
-
-- real-time solar tracking  
-- constraint-aware behavior  
-- actuator limit enforcement  
-- system state transitions  
+python src/main.py
 
 ---
 
+## Why This Project Matters
 
-### Constraint Handling
+This project demonstrates the combination of:
 
-The system evaluates two types of constraints:
-
-- **Solar Constraint**
-  - Maximum allowable tilt angle
-  - Prevents unrealistic panel orientations
-
-- **Actuator (Leg Length) Constraint**
-  - Each leg must remain within:
-    ```
-    [LEG_MIN, LEG_MAX]
-    ```
-  - Violations indicate mechanical infeasibility
+* Machine learning in production
+* Real-time simulation systems
+* Mathematical modeling
+* Backend API engineering
+* Frontend integration
+* Debugging real-world ML deployment issues
 
 ---
 
-### Failure Classification
+## Future Improvements
 
-The system not only detects constraint violations but also **identifies their cause**:
-
-- `SUN_LIMIT` → required tilt exceeds maximum allowed tilt  
-- `LEG_LIMIT` → actuator lengths exceed mechanical limits  
-
-These failure types are **visually distinguished in the simulation**:
-
-- Gray → solar constraint failure  
-- Red → actuator constraint failure  
+* Reinforcement learning control layer
+* Real-time dashboard analytics
+* Hardware actuator integration
+* Solar energy efficiency optimization
+* Cloud deployment pipeline
 
 ---
 
-### Cycle-Based Reset Logic
-
-The simulation operates in repeating cycles of solar motion.
-
-- When a new cycle begins:
-  - The system resets its state
-  - Previous lock conditions are cleared
-- This allows the system to re-evaluate feasible configurations dynamically
-
-# How to Run
-
-Clone the repository
-
-`git clone https://github.com/aleynaozdogann/sun-tracking-six-leg-panel-system.git`
-
-Navigate into the project folder
-
-`cd sun-tracking-six-leg-panel-system`
-
-Install dependencies
-
-`pip install -r requirements.txt`
-
-Train the machine learning model
-
-`python src/train_model.py`
-
-Run the API
-
-`uvicorn src.api:app --reload`
-
-Open API docs in your browser
-
-http://127.0.0.1:8000/docs
-
-Run the simulation
-
-`python src/main.py`
-
-Note: The API must be running before starting the simulation.
-
----
-
-# Future Development
-
-Planned improvements include:
-
-- constraint-aware machine learning models  
-- reinforcement learning for optimal tracking control  
-- dynamic modeling (forces, torque, actuator limits)  
-- wind and environmental disturbance modeling  
-- energy efficiency optimization  
-- real-world hardware implementation of the mechanism  
-- web-based control dashboard for live solar tracking
-- cloud deployment of the prediction API
-- real-time hardware integration
----
-
-
-# Frontend Preview (Coming Soon)
-
-A visual interface is currently under development to display real-time panel orientation and system behavior.
-
----
-
-# Author
+## Author
 
 **Aleyna Özdoğan**
 
-Mathematics graduate interested in:
+Mathematics graduate focused on:
 
-- Artificial Intelligence  
-- Simulation Engineering  
-- Computational Modeling  
-- Data Science
+* Artificial Intelligence
+* Backend Development
+* Simulation Engineering
+* Computational Modeling
