@@ -50,10 +50,20 @@ def calculate_required_zenith(sx, sy, sz):
 
 @app.post("/predict")
 def predict(data: SunVector):
+    sun = np.array([data.sun_x, data.sun_y, data.sun_z], dtype=float)
+    norm = np.linalg.norm(sun)
+
+    if norm == 0:
+        return {
+            "error": "Sun vector cannot be zero."
+        }
+
+    normalized_sun = sun / norm
+
     x = pd.DataFrame([{
-        "sun_x": data.sun_x,
-        "sun_y": data.sun_y,
-        "sun_z": data.sun_z
+        "sun_x": normalized_sun[0],
+        "sun_y": normalized_sun[1],
+        "sun_z": normalized_sun[2]
     }])
 
     prediction = model.predict(x)[0]
@@ -63,15 +73,6 @@ def predict(data: SunVector):
         data.sun_y,
         data.sun_z
     )
-
-    print("INPUT:")
-    print(x)
-
-    print("ML PREDICTION:")
-    print(prediction)
-
-    print("ANALYTIC ZENITH:")
-    print(analytic_zenith)
 
     return {
         "predicted_zenith": float(prediction),

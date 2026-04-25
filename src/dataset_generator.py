@@ -5,7 +5,7 @@ import pandas as pd
 from kinematics import get_bpts, get_ipts, get_panel, max_s
 
 
-def generate_dataset(output_path="../data/solar_tracking_dataset.csv", total_frames=200):
+def generate_dataset(output_path="../data/solar_tracking_dataset.csv", total_frames=5000):
     bpts = get_bpts()
     records = []
 
