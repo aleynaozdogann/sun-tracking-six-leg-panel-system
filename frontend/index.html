@@ -110,11 +110,40 @@
         <p id="result-text">Result will appear here</p>
         <p class="note">Analytic zenith is the physical reference. ML estimate is shown for comparison.</p>
       </div>
+
+      <div class="result-box">
+          <h2>Recent Predictions</h2>
+          <div id="history-list">
+              No history yet.
+          </div>
     </div>
   </div>
 
   <script>
     const form = document.getElementById("solar-form");
+    const historyList = document.getElementById("history-list");
+
+    async function loadHistory() {
+        const response = await fetch("http://127.0.0.1:8000/history");
+        const data = await response.json();
+        console.log(data);
+
+        historyList.innerHTML = "";
+        const predictions = data.predictions;
+
+        if (predictions.length === 0) {
+            historyList.textContent = "No history yet.";
+            return;
+        }
+
+        for (const item of predictions) {
+            historyList.innerHTML +=
+                "Required: " + item.analytic_zenith.toFixed(2) + "° | " +
+                "ML: " + item.predicted_zenith.toFixed(2) + "° | " +
+                "Error: " + item.error.toFixed(2) + "°<br>";
+        }
+    }
+    loadHistory();
 
     form.addEventListener("submit", async function(e) {
       e.preventDefault();
@@ -159,6 +188,8 @@
           `Required Zenith: ${analytic.toFixed(2)}°\n` +
           `ML Estimate: ${predicted.toFixed(2)}°\n` +
           `Error: ${error.toFixed(2)}°`;
+
+      loadHistory();
 
       } catch (error) {
         console.error("Error:", error);

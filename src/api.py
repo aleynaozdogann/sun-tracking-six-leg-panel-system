@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
+from src.database import init_db, save_prediction, get_predictions
 
 app = FastAPI()
 
@@ -12,6 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = BASE_DIR / "solar_tracking_model.pkl"
 
 model = joblib.load(MODEL_PATH)
+init_db()
 
 
 class SunVector(BaseModel):
@@ -74,7 +76,19 @@ def predict(data: SunVector):
         data.sun_z
     )
 
+    save_prediction(
+        data.sun_x,
+        data.sun_y,
+        data.sun_z,
+        float(prediction),
+        analytic_zenith
+    )
+
     return {
         "predicted_zenith": float(prediction),
         "analytic_zenith": analytic_zenith
     }
+
+@app.get("/history")
+def history():
+    return {"predictions": get_predictions()}
