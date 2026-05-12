@@ -1,6 +1,6 @@
 # AI Solar Tracking System
 
-Machine-learning assisted solar panel tracking platform featuring real-time 3D simulation, FastAPI deployment, and interactive web interface.
+Machine-learning assisted solar tracking platform featuring simulation engineering, FastAPI deployment, and an interactive web dashboard.
 
 This project combines **mathematical modeling**, **simulation engineering**, and **machine learning** to optimize solar panel orientation based on the Sun direction vector.
 
@@ -8,18 +8,27 @@ This project combines **mathematical modeling**, **simulation engineering**, and
 
 ## Highlights
 
-* Real-time 3D six-leg solar tracking simulation
-* Stewart-platform inspired mechanism
+* Stewart-platform inspired solar tracking simulation
+* Six-leg parallel mechanism architecture
 * Machine learning angle prediction using Random Forest Regressor
-* R² Score ≈ 0.99999
+* R² Score > 0.99
 * Prediction error reduced to ~0.1°
 * FastAPI REST API deployment
-* Interactive frontend demo
+* Interactive frontend dashboard
 * Constraint-aware tracking logic
 * Mechanical tilt and actuator limit validation
 
 ---
+## Live Demo
 
+Frontend:
+https://sun-tracking-six-leg-panel-system.vercel.app
+
+Backend API:
+https://sun-tracking-six-leg-panel-system.onrender.com
+
+API Docs:
+https://sun-tracking-six-leg-panel-system.onrender.com/docs
 ## Demo Preview
 
 ### Web Interface
@@ -68,7 +77,7 @@ Predicted Zenith Angle
 
 ### Performance
 
-* R² ≈ 0.99999
+* R² > 0.99
 * Average prediction error ≈ 0.1°
 
 ### Engineering Improvement
@@ -103,6 +112,7 @@ Resolved real-world inference mismatch by aligning training data normalization w
 
 * FastAPI
 * Uvicorn
+* SQLite
 
 ### Frontend
 
@@ -116,6 +126,10 @@ Resolved real-world inference mismatch by aligning training data normalization w
 * GitHub
 * PyCharm
 
+### Deployment
+
+* Render
+* Vercel
 ---
 
 ## API Usage
@@ -124,9 +138,18 @@ Resolved real-world inference mismatch by aligning training data normalization w
 
 uvicorn src.api:app --reload
 
-### Endpoint
+### Endpoints
 
 POST /predict
+
+Predicts the required panel zenith angle from the given Sun vector.
+
+GET /history
+
+Returns recent prediction history including:
+- predicted zenith
+- analytic zenith
+- prediction error
 
 ### Example Request
 
