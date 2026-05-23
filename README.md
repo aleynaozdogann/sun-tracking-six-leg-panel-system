@@ -4,6 +4,8 @@ Machine-learning assisted solar tracking platform featuring simulation engineeri
 
 This project combines **mathematical modeling**, **simulation engineering**, and **machine learning** to optimize solar panel orientation based on the Sun direction vector.
 
+This project demonstrates how mathematical modeling, machine learning, backend engineering, and simulation systems can be integrated into a single real-time engineering workflow.
+
 ---
 
 ## Highlights
@@ -12,7 +14,7 @@ This project combines **mathematical modeling**, **simulation engineering**, and
 * Six-leg parallel mechanism architecture
 * Machine learning angle prediction using Random Forest Regressor
 * R² Score > 0.99
-* Prediction error reduced to ~0.1°
+* Average prediction error ≈ 0.1°
 * FastAPI REST API deployment
 * Interactive frontend dashboard
 * Constraint-aware tracking logic
@@ -47,15 +49,19 @@ https://sun-tracking-six-leg-panel-system.onrender.com/docs
 
 ## Project Architecture
 
-Frontend UI
-↓
-FastAPI Backend
-↓
-Trained ML Model
-↓
-Predicted Zenith Angle
-↓
-3D Simulation / Tracking Logic
+```text
+Sun Vector
+    ↓
+ML Model (Random Forest)
+    ↓
+Predicted Zenith
+    ↓
+Constraint Validation
+    ↓
+3D Simulation Engine
+    ↓
+Frontend Dashboard
+```
 
 ---
 
@@ -85,7 +91,15 @@ Predicted Zenith Angle
 Resolved real-world inference mismatch by aligning training data normalization with production API inputs.
 
 ---
+## Challenges & Lessons Learned
 
+- Handling physically impossible tracking states caused by actuator constraints
+- Preventing unstable panel motion near maximum tilt angles
+- Aligning ML training data normalization with production API inputs
+- Designing a modular architecture between simulation, ML inference, and backend API
+- Improving prediction stability during real-time simulation updates
+
+---
 ## Simulation Features
 
 * Real-time animated Sun movement
@@ -136,7 +150,9 @@ Resolved real-world inference mismatch by aligning training data normalization w
 
 ### Run Locally
 
+```bash
 uvicorn src.api:app --reload
+```
 
 ### Endpoints
 
@@ -153,19 +169,21 @@ Returns recent prediction history including:
 
 ### Example Request
 
+```json
 {
-"sun_x": 35,
-"sun_y": 69,
-"sun_z": 42
+  "sun_x": 35,
+  "sun_y": 69,
+  "sun_z": 42
 }
+```
 
 ### Example Response
-
+```
 {
 "predicted_zenith": 61.32,
 "analytic_zenith": 61.50
 }
-
+```
 ---
 
 ## How to Run
@@ -206,13 +224,13 @@ This project demonstrates the combination of:
 
 ---
 
-## Future Improvements
+## Next Engineering Goals
 
-* Reinforcement learning control layer
-* Real-time dashboard analytics
-* Hardware actuator integration
-* Solar energy efficiency optimization
-* Cloud deployment pipeline
+- Reinforcement learning based adaptive tracking
+- Real-time monitoring dashboard
+- Hardware actuator integration
+- GPU accelerated simulation
+- Cloud-native deployment pipeline
 
 ---
 
