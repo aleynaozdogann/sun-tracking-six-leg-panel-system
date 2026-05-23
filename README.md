@@ -144,6 +144,7 @@ Resolved real-world inference mismatch by aligning training data normalization w
 
 * Render
 * Vercel
+* Docker
 ---
 
 ## API Usage
